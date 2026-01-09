@@ -1,0 +1,86 @@
+---
+title: "LP practice"
+author: "Dimple"
+date: "2024-09-09"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, comment = NA)
+```
+
+```{r chunk_1}
+data <- matrix(c(2, 30, 8, 1.5, 45, 10, 1, 40, 6), ncol = 3, byrow = TRUE)
+colnames(data) <- c("material", "labour", "profit")
+rownames(data) <- c("men", "women", "children")
+table <- as.table(data)
+table
+```
+  **Answer to the question**
+  Suppose,\
+  Number of gloves for men $$= g_{m}  $$\
+  Number of gloves for women $$= g_{w}  $$\
+  Number of gloves for children $$= g_{c}  $$\
+  Number of full time workers $$= n_f$$\
+  Number of part time workers $$= n_p$$\
+  
+  a. Thus the decision variables are: $$g_m, g_w, g_c, n_f, n_p$$
+  b. objective function,\
+  $$Max \hspace{.3cm} profit \hspace{.3cm} Z=
+  8g_m+10g_w+6g_c-13(40)n_f-10(20)n_p$$
+  
+  c. Constraints\
+  $$Material \hspace{.3cm} constraints: 2g_m+1.5g_w+g_c\le 5000$$
+  
+ $$Labor \hspace{.3cm} constraints: 30g_m+45g_w+40g_c\le 40n_f+20n_p$$
+ 
+ $$full-time \hspace{.3cm}and\hspace{.3cm} part-time\hspace{.3cm}
+ workers \hspace{.3cm}relationship: n_f\ge2n_p$$
+ 
+ 
+ $$Non-negativity\hspace{.3cm} of\hspace{.3cm} the\hspace{.3cm}
+ decision \hspace{.3cm}variables: g_m\ge0, g_w\ge0,g_c\ge0, n_f\ge0,n_p\ge0$$
+ 
+ $$full-time \hspace{.3cm} workers \hspace{.3cm}cannot
+ \hspace{.3cm}drop \hspace{.3cm}below \hspace{.3cm} 20:n_f\ge20$$
+ 
+ 
+   **Solving the above LP model in R**
+```{r}
+library(lpSolve)
+```
+   
+Writing down the objective function
+
+```{r}
+f.obj<-c(8,10,6,-520,-200)
+```
+Set constraints
+
+```{r}
+f.con<-matrix(c(2,1.5,1,0,0,
+          30,45,40,-2400,-1200,
+          0,0,0,-1,2),nrow = 3, byrow = TRUE)
+```
+Set inequality signs
+
+```{r}
+f.dir<-c("<=",
+         "<=",
+         "<=",
+         "<=")
+```
+Set right hand side coefficients
+
+```{r}
+f.rhs<-c(5000,0,0,-20)
+```
+Get the values of obj. fun
+
+```{r}
+lp("max",f.obj,f.con,f.dir,f.rhs)
+```
+
+
+
+  

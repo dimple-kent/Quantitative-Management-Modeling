@@ -1,0 +1,311 @@
+---
+title: "Goal Programming"
+author: "Dambar Uprety"
+date: "2024-10-28"
+output:
+  html_document: default
+  pdf_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, comment = NA)
+```
+
+The Dewright Company is considering three new products to replace current models that are being discontinued, so their chief systems engineer has been assigned the task of determining which mix of these products should be produced. Management wants primary consideration given to three factors: **long-run profit, stability in the work force**, and the **level of capital investment** that would be required now for new equipment. In particular, they have established the goals of (1) achieving a **long-run profit** (net present value) of at least **\$125,000,000** from these products, (2) maintaining the current **employment level of 4,000 employees**, and (3) holding the capital **investment to less than $55,000,000**. However, management realizes that it probably won't be possible to attain all of these goals simultaneously, so they have discussed their priorities with the chief systems engineer. This discussion has led to setting penalty weights of 5 for missing the profit goal (per million dollars under), 2 for going over the employment goal (per hundred employees) and 4 for going under this same goal, and 3 for exceeding the capital investment goal (per million dollars over). Each new product's contribution to profit, employment level, and capital investment level is proportional to the numbers produced. These contributions per unit produced are shown in the table below, along with the goals and penalty weights.
+
+**Note:** In a goal programming problem like this, penalty weights are conceptual tools established by the company's management to prioritize and quantify the cost or importance of unmet goals. They are not literal financial penalties collected or charged by an external party. Instead, these weights reflect management's preferences and the relative importance of achieving or falling short of each goal.
+
+* **Imposition of Penalties:** The management imposes these weights as a way to guide decision-making. They reflect how much the company values each goal and allow the systems engineer to determine an optimal production mix that balances multiple, potentially conflicting, objectives.
+
+* **Interpretation of Penalties:** The weights assigned (e.g., a weight of 5 for each million dollars under the profit goal) allow the optimization model to "penalize" deviations from the set goals by increasing the objective function's value when these goals are not met. This discourages solutions that fail to meet high-priority goals, making it more likely the solution will satisfy them.
+
+* **Role in Optimization:** These penalty weights will drive the optimization to minimize the total weighted deviation from the goals. For example:
+
+    + If the profit goal is missed by a certain amount, the penalty (per million dollars under) is factored into the model, impacting the objective function.
+    
+    + If the employment goal is exceeded or falls short, the penalties for overage or shortfall are added, with higher priority for achieving the exact goal.
+    
+    
+
+```{r}
+library(kableExtra)
+```
+
+Creating the Data Frame (df):
+
+```{r}
+df= data.frame(Factor=c("Profit","Employement","Investment"),
+
+               "1"=c(12,5,5),
+
+               "2"=c(9,3,7),
+
+               "3"=c(15,4,8),
+
+               Goal=c(">=125","=40","<=55"),
+
+               penalty=c(5,'2(+),4(-)',3)
+
+)
+```
+
+Formatting the Table with kable and kableExtra:
+
+* The kable function is used to create a basic table from df, with centered alignment (align = "c") for each column.
+
+* kable_classic() from kableExtra adds a classic table style, enhancing its visual appearance.
+
+* The two add_header_above lines add two headers above the table:
+
+    + The first row places "Product" above columns 2, 3, and 4.
+    
+    + The second row places "Unit contribution" above the same columns.
+    
+    + The blank cells (" " = 1 and " " = 2) keep the Factor, Goal, and penalty columns outside these headers.
+    
+* These column_spec() functions add right-side borders to the first, fourth, and fifth columns, visually distinguishing the Factor, Goal, and penalty columns from the main content.
+
+```{r}
+df %>%
+
+  kable(align = "c") %>%
+
+  kable_classic() %>%
+
+  add_header_above(header = c(" "=1,"Product"=3," "=2)) %>%
+  
+  # Add a single overarching header spanning all columns
+  # add_header_above(header = c("Overall Header Title" = ncol(df))) %>%
+
+  add_header_above(header = c(" "=1,"Unit contribution"=3," "=2)) %>%
+
+  column_spec(1,border_right = TRUE) %>%
+
+  column_spec(4,border_right = TRUE) %>%
+
+  column_spec(5,border_right = TRUE)
+```
+**Questions**
+
+1. Define y1+ and y1-, respectively, as the amount over (if any) and the amount under (if any) for the profit level, y2+ and y2-for the employment level goal. Define y3+ and y3- in the same way for the goal regarding investment. Define x1, x2, and x3 as the production rates of Products 1, 2, and 3, respectively. With these definitions, use the goal programming technique to express y1+,y1- , y2+, y2-, y3+ and y3- algebraically in terms of x1, x2, and x3. 
+
+2. Express objective function in terms of x1, x2, x3, y1+, y1- , y2+, y2-,y3+ and y3-.
+
+3. Formulate mathematically the goal programming model
+4. Solve the model you built in (3) in R markdown. 
+5. What are your findings?
+
+**Answer**
+
+**1. We have production rates of the first, second and the third goods as $x_1, x_2$ and $x_3$.** 
+Then We can write the constraints in terms of these products as below: 
+
+$12x_1+9x_2+15x_3 \ge 125$
+
+$5x_1+3x_2+4x_3 = 40$
+
+$5x_1+7x_2+8x_3 \le 55$
+
+We can write these three constraints in deviation form as below:
+
+$y_1 = 12x_1+9x_2+15x_3 - 125$
+
+$y_2 = 5x_1+3x_2+4x_3 - 40$
+
+$y_3 = 5x_1+7x_2+8x_3 - 55$
+
+Where, actual profit = $12x_1+9x_2+15x_3$ and minimum profit requirement = $125$
+So, $y_1$ could be positive, negative or zero depending on whether positive or negative part is greater. Similar explanations apply to other two constraints. 
+
+Let's define $y_i = y_i^+ - y_i^-$
+
+That is, 
+
+$y_1 = y_1^+ - y_1^-$
+
+$y_2 = y_2^+ - y_2^-$
+
+$y_3 = y_3^+ - y_3^-$
+
+Where, 
+
+$y_1^+$ is a positive deviation or over achievement of profit.
+
+$y_1^-$ is a negative deviation or under achievement of profit.
+
+$y_2^+$ is a positive deviation or over achievement of employment.
+
+$y_2^-$ is a negative deviation or under achievement of employment.
+
+$y_3^+$ is a positive deviation or over achievement of investment.
+
+$y_3^-$ is a negative deviation or under achievement of investment.
+
+
+Then we  can write the above three constraints as:
+
+$y_1^+ - y_1^- = 12x_1+9x_2+15x_3 - 125$
+
+$y_2^+ - y_2^- = 5x_1+3x_2+4x_3 - 40$
+
+$y_3^+ - y_3^- = 5x_1+7x_2+8x_3 - 55$
+
+Some simple math yields:
+
+$12x_1+9x_2+15x_3 -(y_1^+ - y_1^-) = 125$
+
+$5x_1+3x_2+4x_3 -(y_2^+ - y_2^-)= 40$
+
+$5x_1+7x_2+8x_3 -(y_3^+ - y_3^-) = 55$
+
+**2. Objective function here is to minimize the deviation from the goal.** 
+The goal is to maintain profit at least $125$ million dollars, stable employment at $4000$ and the minimum investment of $55$ million dollars. If deviated profit from $125$ to something below then there is a penalty of 5 for each million decrease in profit. But no penalty for profit increment (a lower bound one sided profit constraint). So total penalty from the profit deviation $=5y_1^-$.
+
+Similarly, total penalty from the employment deviation $=2y_2^+ + 4y_2^-$
+
+And the total penalty from investment deviation $=3y_3^+$
+
+Thus, total penalty $PEN =5y_1^-+2y_2^+ + 4y_2^-+3y_3^+$
+
+So, the objective function is 
+
+$Min \ PEN =5y_1^-+2y_2^+ + 4y_2^-+3y_3^+$
+
+**3. Mathematical formulation of the goal programming in this particular case is** 
+
+$Min \ PEN =5y_1^-+2y_2^+ + 4y_2^-+3y_3^+$
+
+Subject to the constraints
+
+$12x_1+9x_2+15x_3 -(y_1^+ - y_1^-) = 125$
+
+$5x_1+3x_2+4x_3 -(y_2^+ - y_2^-)= 40$
+
+$5x_1+7x_2+8x_3 -(y_3^+ - y_3^-) = 55$
+
+Non-negativity of the decision variables
+
+$x_1\ge 0$, $x_2\ge 0$, $x_3\ge 0$
+
+$y_1^+ \ge 0$, $y_1^- \ge 0$, $y_2^+ \ge 0$, $y_2^- \ge 0$, 
+$y_3^+ \ge 0$, $y_3^- \ge 0$
+
+**4.  We can solve the goal programming model built in (3) in R as below.** 
+
+This line loads the "lpSolveAPI" package, which is used for solving linear programming problems (Goal programming is also a LP model with several objectives).
+
+```{r}
+library(lpSolveAPI)
+```
+lprec <- make.lp(3, 9): This line creates an LP (linear programming) problem instance with 3 constraints and 9 decision variables. lprec is an object that represents the LP problem.
+
+```{r}
+lprec <-make.lp(3,9)
+```
+
+This line sets the objective function coefficients for the 9 decision variables. In this case, the coefficients are provided as a vector. A proper orderings of the variable should be maintained. Order should be consistent in objective function and constraints. 
+
+```{r}
+set.objfn(lprec, c(0,0,0,0,5,2,4,3,0))
+```
+This line sets the objective sense to 'min,' indicating that you want to minimize the objective function. The output is showing the current control parameters for the lpSolve model object, which can be verbose. To avoid displaying all this information, you can wrap the lp.control() function inside invisible(). This will suppress the unnecessary output and only apply the control settings. "invisible" will execute lp.control() without printing any of the verbose output.
+
+```{r}
+invisible(lp.control(lprec, sense = 'min'))
+```
+This line adds the first constraint to the LP problem. It specifies the coefficients of the decision variables for the first constraint. The indices argument maps the coefficients to the corresponding decision variables.
+
+```{r}
+set.row(lprec,1,c(12,9,15,-1,1,0,0,0,0), indices = c(1,2,3,4,5,6,7,8,9))
+```
+This line adds the second constraint to the LP problem, similar to the previous line but for the second constraint.
+
+```{r}
+set.row(lprec,2,c(5,3,4,0,0,-1,1,0,0), indices = c(1,2,3,4,5,6,7,8,9))
+```
+This line adds the third constraint to the LP problem, similar to the previous lines but for the third constraint.
+
+```{r}
+set.row(lprec,3,c(5,7,8,0,0,0,0,-1,1), indices = c(1,2,3,4,5,6,7,8,9))
+```
+
+This line creates a vector rhs containing the right-hand side values for the three constraints.
+
+```{r}
+rhs<-c(125,40,55)
+```
+This line sets the right-hand side values for the constraints in the LP problem.
+
+```{r}
+set.rhs(lprec,rhs)
+```
+This line sets the constraint types for the three constraints. In this case, they are all set to equality ('=').
+
+```{r}
+set.constr.type(lprec,c("=","=","="))
+```
+This line sets lower bounds for the 9 decision variables. The lower bounds are set to zero in this case (non-negativity of the decision variables)
+
+```{r}
+set.bounds(lprec,lower = rep(0,9))
+```
+This line assigns names to the three constraints.
+
+```{r}
+lp.rownames<-c("profit","employment","investment")
+```
+
+This line assigns names to the nine decision variables. p stands for plus and m for minus. 
+
+```{r}
+lp.colnames<-c("x1","x2","x3","y1p","y1m","y2p","y2m","y3p","y3m")
+```
+This line solves the LP problem using the specified constraints and objective function.
+
+```{r}
+solve(lprec)
+```
+This line retrieves the optimal objective value of the LP problem.
+
+```{r}
+get.objective(lprec)
+```
+
+This line retrieves the values of the decision variables at the optimal solution.
+
+```{r}
+get.variables(lprec)
+```
+
+**5. What are your findings?**
+
+Here are the findings for the goal programming problem:
+
+The LP problem was successfully solved using the specified constraints and objective function.
+
+The optimal objective value of the LP problem is approximately $16.67$ (rounded to two decimal places).
+
+The values of the decision variables at the optimal solution are as follows:
+
+* $x1 = 8.33$ (rounded to two decimal places)
+* $x2 = 0.00$
+* $x3 = 1.67$ (rounded to two decimal places)
+* $y_1^+ = 0.00$
+* $y_1^- = 0.00$
+* $y_2^+ = 8.33$ (rounded to two decimal places)
+* $y_2^- = 0.00$
+* $y_3+ = 0.00$
+* $y_3^+ = 0.00$
+
+These findings represent the optimal solution to the goal programming problem. The values of the decision variables provide insights into the recommended production levels and deviations from the goals for each factor, taking into account the defined constraints and penalties. In this solution, the objective was to minimize the deviations from the goals while considering the associated penalties.
+
+It appears that only $y_2^+$ has a non-zero value, which means there is a positive deviation associated with the goal for employment $(y_2)$. To calculate the penalty associated with $y_2^+$, you need to know the associated penalty coefficient, which is 2 based on the code.
+
+So, the penalty for the positive deviation in employment $(y_2^+)$ is:
+Penalty $= 8.33$ (rounded to two decimal places) * $2 = 16.67$ (rounded to two decimal places)
+
+The penalty for other factors is zero because their associated variables $(y_1^+, y_1^-, y_3^+, y_3^-)$ have zero values in the optimal solution.
+
+Therefore, the penalty for the goal programming problem is approximately $16.67$ (rounded to two decimal places), and it is associated with the positive deviation in employment $(y_2^+)$.
+
+

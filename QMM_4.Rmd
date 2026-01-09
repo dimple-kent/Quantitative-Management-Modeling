@@ -1,0 +1,327 @@
+---
+title: "The Transportation Model"
+author: "FNU Dimple"
+date: "2024-10-07"
+output:
+  html_document: default
+  pdf_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+Heart Start produces automated external defibrillators (AEDs) in each of three different plants
+(A, B and C). The unit production costs and monthly production capacity of the two plants are
+indicated in the table below. The AEDs are sold through three wholesalers. The shipping cost
+from each plant to the warehouse of each wholesaler along with the monthly demand from each
+wholesaler are also indicated in the table. How many AEDs should be produced in each plant,
+and how should they be distributed to each of the three wholesaler warehouses so as to minimize
+the combined cost of production and shipping?
+# Create the table 
+```{r}
+library(knitr)
+```
+
+# Create a data frame with the table data
+
+```{r}
+table <- matrix(c(20,14,25,400,100,
+                     12,15,14,300,125,
+                     10,12,15,500,150,
+                     80,90,70,"-","-"), nrow=4,  byrow=TRUE)
+
+colnames(table) <- c("Warehouse 1", "Warehouse 2", "Warehouse 3", "Production Cost", "Supply")
+
+rownames(table) <-c("Plant A", "Plant B", "Plant C", "Monthly Demand")
+
+table <- as.table(table)
+table
+```
+
+# Create the table with supply and demand imbalance
+```{r}
+table <- data.frame(
+  Plant = c("Plant A", "Plant B", "Plant C", "Monthly Demand"),
+  Warehouse_1 = c("$20", "$12", "$10", 80),
+  Warehouse_2 = c("$14", "$15", "$12", 90),
+  Warehouse_3 = c("$25", "$14", "$15", 70),
+  Dummy_variables = c("0", "0", "0", 135),
+  Production_Cost = c("$400", "$300", "$500", "-"),
+  Production_Capacity = c(100, 125, 150, 375)
+)
+# Print the table using knitr::kable
+kable(table, 
+      col.names = c("Plant", "Warehouse 1", "Warehouse 2", "Warehouse 3", 
+                    "Dummy Variables", "Production Cost", "Production Capacity"),
+      align = "c")
+```
+
+# Formulate a transportation problem
+
+# (a) Decision Variables
+
+These represent the number of AEDs shipped from each plant to each warehouse
+
+Let assume,
+
+Plant A = X, Plant B = X, Plant C = X,
+
+- Plant A to warehouse 1 = $X_{A1}$
+- Plant A to warehouse 2 = $X_{A2}$
+- Plant A to warehouse 3 = $X_{A3}$
+
+- Plant B to warehouse 1 = $X_{B1}$
+- Plant B to warehouse 2 = $X_{B2}$
+- Plant B to warehouse 3 = $X_{B3}$
+
+- Plant C to warehouse 1 = $X_{C1}$
+- Plant C to warehouse 2 = $X_{C2}$
+- Plant C to warehouse 3 = $X_{C3}$
+
+So, the decision variables are
+
+$$X_{A1},X_{A2},X_{A3},X_{B1},X_{B2},X_{B3},X_{C1},X_{C2}\hspace{.3cm}and\hspace{.3cm} X_{C3}$$
+
+# (b) Objective Function
+
+The objective function of the dual Minimize total cost (production + shipping):
+
+This aims to minimize the combined production and shipping costs. The total cost is calculated by adding the production costs and the shipping costs for each plant-to-warehouse route.
+
+$$Minimize\hspace{.3cm}Z = 
+420X_{A1}+414X_{A2}+425X_{A3}+312X_{B1}+315X_{B2}+314X_{B3}+510X_{C1}+512X_{C2}+515X_{C3}$$
+
+
+# (c) Constraints
+
+These ensure that each plant’s total shipments do not exceed its production capacity, and that the warehouses receive at least the amount they demand.
+
+- Demand Constraints:
+
+  (For warehouse 1)  $$X_{A1}+X_{B1}+X_{C1}\ge80$$   
+      
+  (For warehouse 2) $$X_{A2}+X_{B2}+X_{C2}\ge90$$   
+           
+  (For warehouse 3) $$X_{A3}+X_{B3}+X_{C3}\ge70$$
+
+- Suppply Constraints:
+      
+ $$X_{A1}+X_{A2}+X_{A3}+x_{A4}\le100$$  (Plant A)
+ 
+ $$X_{B1}+X_{B2}+X_{B3}+x_{B4}\le125$$  (Plant B)
+ 
+ $$X_{C1}+X_{C2}+X_{C3}+x_{C4}\le150$$  (Plant C)
+
+- Non-negativity:
+   $$x_{ij}\ge0$$\hspace{.3cm} where i = 1,2,3 \hspace{.3cm}j = 1,2,3,4
+    
+# Solve in R
+
+We can use the lpSolve library in R to solve this linear programming transportation problem.
+
+```{r}
+# Install and load lpSolve library
+# install.packages("lpSolve") (Install if needed)
+library(lpSolve)
+```
+
+# Cost matrix
+
+```{r}
+# Define the cost matrix (shipping costs + production cost)
+costs <- matrix(c(420, 414, 425,0,
+                  312, 315, 314,0,
+                  510, 512, 515,0), nrow = 3, byrow = TRUE)
+
+```
+
+# Set names
+
+```{r}
+colnames(costs) <-c("Warehouse 1", "Warehouse 2", "Warehouse 3", "Dummy Variables")
+                    
+rownames(costs) <-c("Plant A", "Plant B", "Plant C")
+costs
+```
+
+# Define the supply and demand constraints:
+
+```{r}
+# Define supply for each plant 
+supply <- c(100, 125, 150)
+
+# Define demand warehouse
+demand <- c(80, 90, 70,135)
+
+```
+
+# The Transportation problem
+
+```{r}
+# Solve the transportation problem
+solution <- lp.transport(costs, "min", row.signs = rep("<=", 3), row.rhs = supply,
+                         col.signs = rep(">=", 4), col.rhs = demand)
+
+```
+
+# Displays the optimal number of units to ship from each plant to each warehouse
+
+```{r}
+# Output the solution
+solution$solution  
+```
+# The minimum total cost
+
+```{r}
+# Displays the minimum total cost
+solution$objval   
+```
+
+When solved the transportation problem, I got the values of the variables as
+
+$$x_{11}=10$$
+$$x_{12}=90$$
+$$x_{21}=55$$
+$$x_{23}=70$$
+$$x_{31}=15$$
+The minimized value of the transportation cost is 88250
+
+A transportation problem involving the production and distribution of automated external defibrillators (AEDs) from three plants to three wholesalers. The relevant data, defined decision variables representing shipments, and established an objective function to minimize total costs, which included both production and shipping expenses. The lpSolve library in R, determined the optimal distribution of AEDs, ensuring that supply constraints from each plant and demand requirements from each warehouse were met. Analysis yielded a minimum transportation cost of $88,250, demonstrating effective application of linear programming in optimizing supply chain logistics.
+
+# Formulate the Dual of the Transportation model
+
+The dual variables associated to the two classes of constraints: supply and demand constraints. The right hand side of the primal will be the coefficients of the objective function of the dual. RHS constants of the primal are 80, 90,70, 100, 125, 150 So, these numbers serve as the coefficients of the objective function of the dual.
+
+In a transportation problem, the dual formulation provides insights into the cost structure of the problem, including how much each additional unit of supply or demand would cost the system. The dual problem is derived from the primal problem, and its purpose is to assign values to the constraints of the primal problem.
+
+# Decision Variables 
+
+Decision Variables for the Dual Problem
+
+Let assume,
+
+- Dual variable for Plant A (capacity 100) = $$v_A$$ 
+
+- Dual variable for Plant B (capacity 125) = $$v_B$$ 
+
+- Dual variable for Plant C (capacity 150) = $$v_C$$
+
+- Dual variable for Warehouse 1 (demand 80) = $$u_1$$ 
+
+- Dual variable for Warehouse 2 (demand 90) = $$u_2$$
+
+- Dual variable for Warehouse 3 (demand 70) = $$u_3$$
+
+# Dual objective function:
+
+The dual objective function is the value addition (VA) for the suppliers. The dual problem is to maximize the value of the resources under the given constraints. The difference is the VA or profit.
+
+**The objective function of the dual**
+
+$$Maximize\hspace{.3cm}Z = Revenue - Cost = 80u_A+90u_B+70u_C-100v_1-125v_2-150v_3$$
+
+# Dual constraints:
+
+$$v_j-u_i\ge c_{ij}$$
+***Plant A***
+
+
+$$v_1-u_A\ge c_{11}=420$$  
+
+$$v_2-u_A\ge c_{12}=414$$
+
+
+$$v_3-u_A\ge c_{13}=425$$ 
+
+***Plant B***
+
+$$v_1-u_B\ge c_{21}=312$$
+
+$$v_2-u_B\ge c_{22}=315$$
+$$v_3-u_B\ge c_{23}=314$$
+***Plant C***
+
+$$v_1-u_C\ge c_{31}=510$$
+$$v_2-u_C\ge c_{32}=512$$
+$$v_3-u_C\ge c_{33}=515$$
+
+# Non- Negativity
+
+Non-Negativity for the dual variables.
+
+$$v_j\ge0$$\hspace{.3cm}
+j=1,2,3,4 
+and $$u_i\ge0$$
+i=1,2,3,4
+
+# Economic Interpretation of the Dual Problem
+
+MR=MC
+The per unit revenue received by selling one unit of the product called MR (marginal revenue) in economics. The right side is the per unit cost of making and transporting good called MC (marginal cost). The constraint 𝑣3−𝑢𝐴≥𝑐13 = 425 the plant will continue to produce and ship more units, meaning that MR must exceed MC. The marginal benefit of producing an additional AED at Plant C must exceed the cost of shipping it to Warehouse 1. This balance between marginal revenue and marginal cost is crucial for ensuring efficient allocation of resources and achieving profit maximization, as indicated by the fundamental economic principle MR=MC. This equilibrium is crucial for profit maximization, occurring at the intersection of the MR and MC curves.profit maximization occurs when the marginal revenue from sales equals the marginal cost of production and shipping. he dual model not only provides insight into optimal shipping strategies but also highlights how costs and revenues interact to guide efficient resource allocation in the production and distribution process. Thus, transportation cost minimization problem is equivalent to profit maximization in the dual and which ends up with MR=MC, the universal rule of economics for profit maximization.
+
+
+***Now, load the ggplot2***
+```{r}
+library(ggplot2)
+```
+
+***Create a sequence of quantities (x-axis)***
+
+```{r}
+quantities <- seq(0, 200, by = 1)
+```
+
+Define MR (Demand) and MC (Supply) function
+
+```{r}
+# Define Marginal Revenue (MR) Function
+MR <- function(quantities) {
+  # Marginal Revenue or linear demand curve 
+  a <- 100
+  150 - 1 * quantities  # Decreasing as quantity increases
+}
+
+MC <- function(quantities) {
+# Marginal Cost or supply curve
+  0.5 * quantities # Increasing as quantity increases
+}
+```
+
+***Create a data frame with quantity, MR and MC***
+
+```{r}
+data <- data.frame(
+  Quantity = quantities,
+  MR = MR(quantities),
+  MC = MC(quantities)
+)
+```
+
+**Plot Demand and Supply curves with price on y-axis and quantity on x-axis**
+
+```{r}
+ggplot(data, aes(x = Quantity)) +
+  geom_line(aes(y = MR, color = "Marginal Revenue"), size = 1) +
+  geom_line(aes(y = MC, color = "Marginal Cost"), size = 1) +
+  labs(title = "Marginal Revenue and Marginal Cost",
+       x = "Quantity",
+       y = "Price / Cost") +
+
+  theme_minimal() +
+scale_color_manual(values = c("blue", "red"))
+theme(legend.title = element_blank())
+```
+
+
+
+
+
+
+
+
+
+
+
+
+

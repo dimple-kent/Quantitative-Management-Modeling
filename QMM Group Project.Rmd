@@ -1,0 +1,458 @@
+---
+title: "QMM Group Project"
+author: "Group_7"
+date: "2024-11-21"
+output:
+  html_document: default
+  pdf_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, comment = NULL)
+knitr::opts_chunk$set(message = FALSE)
+knitr::opts_chunk$set(warning = FALSE)
+```
+
+## Problem Statement
+
+You have been assigned the task of forming groups. Consider that your class consists of 15 students, and you aim to create 5 groups, each containing 3 students. The main goal is to maximize the chance of success for each group on a class project. The requirements for forming groups are as follows:
+
+• Divide 15 students into 5 groups of 3 members each.
+
+• What factors affect the success of groups? Define three factors (e.g., GPA, gender, etc.) that you feel influence the contributions students make towards project success.
+
+• Use R's randomization function to generate data for these factors.
+
+• Record the collected data.
+
+• Formulate a mathematical model with an objective function, constraints, and non-negativity components.
+
+• Solve the model in R and report objective function values and decision variables.
+
+• Provide insights in your results.
+
+#### <u>Solution:</u>
+
+To distribute the 15 students into five groups for a project, the objective is to strategically assign them based on individual factors such as GPA, communication skills, and teamwork abilities.
+
+The following are the factors of the students that play a role in dividing them into distinct groups:
+
+#### GPA of the student: 
+
+GPA acts as an indicator of academic ability, reflecting a student’s average performance across their courses. It serves as a concise measure of a student’s overall success and provides insights into their academic standing. Students with higher GPA often contribute more in terms of academic knowledge and problem-solving skills. Having students with different GPA levels encourages peer learning, where stronger students can support others, while those with lower GPA may bring fresh perspectives. GPA also offers insights into a student’s commitment and responsibility, helping ensure that each group has reliable members who contribute consistently. It plays a key role in the project’s success by showcasing each student’s quality and capabilities. However, focusing only on GPA isn’t enough if the student can’t work well with others. For example, a genius who doesn’t share ideas with the team might slow progress, even if they’re smart.
+
+#### Communication Skills: 
+
+Communication skills promote collaboration, ensure clarity, foster positive group dynamics, and help resolve conflicts within the project. These skills enable the group to work more efficiently, solve problems faster, and stay organized, ultimately increasing the chances of project success. For example, imagine a group where one person explains things so clearly that everyone feels confident. But in a team with poor communication, it’s like they’re speaking different languages, and nothing gets done.
+
+#### Teamwork: 
+
+Teamwork reflects a student’s ability to work effectively with others, share responsibilities, and contribute positively to group dynamics. It demonstrates how well a student can collaborate with peers to achieve collective goals, fostering a supportive and efficient team environment.
+
+#### Factors contributed for the group project success out of 100%:
+
+**1. GPA of the student: 40%**
+
+**2. Communication Skills: 30%**
+
+**3. Teamwork: 30%**
+
+```{r}
+library(kableExtra, warn.conflicts = FALSE)
+```
+
+**Generating data for these factors using R's randomization function.**
+
+```{r}
+set.seed(123)
+Total_Rows <- 15
+
+GPA <- round(runif(Total_Rows, min = 2.5, max = 4.0),2)
+GPA_Data <- data.frame(GPA = GPA)
+
+Communication_skill <- round(runif(Total_Rows, min = 4, max = 10),0)
+GPA_Data <- data.frame(Communication_skill = Communication_skill)
+
+Teamwork <- round(runif(Total_Rows, min = 4, max = 10),0)
+gpa_data <- data.frame(Teamwork = Teamwork)
+```
+
+The mean is calculated to find the average value of each of the three factors (GPA, Communication skills, Modelling skills) across all 15 students.
+
+```{r}
+GPA_mean <- mean(GPA)
+round(GPA_mean,2)
+```
+
+The result is 3.35, which represents the average GPA of the students.
+
+```{r}
+Communication_skill_mean <- mean(Communication_skill)
+round(Communication_skill_mean,0)
+```
+
+The number 7 is showing the average communication skill level across the 15 students.
+
+```{r}
+Teamwork_mean <- mean(Teamwork)
+round(Teamwork_mean,0)
+```
+
+The result is 7, representing the average modelling skill level.
+
+**Creating the Data Table**
+
+```{r}
+Student <- c("1","2","3","4","5","6","7","8","9","10","11","12","13","14","15","Avg")
+Students_GPA <- c(GPA, 3.35)
+Communication_value <- c(Communication_skill,7)
+Teamwork_value <- c(Teamwork, 7)
+
+Data_table <-data.frame(Student, Students_GPA, Communication_value, Teamwork_value)
+
+GPA_weight <- 0.4
+Communication_weight <- 0.3
+Teamwork_weight <- 0.3
+
+Data_table$Weighted_Avg <- round(Data_table$Students_GPA * GPA_weight + Data_table$Communication_value * Communication_weight + Data_table$Teamwork_value* Teamwork_weight,2)
+
+Data_table%>%
+  kable(align = "c", format = "html") %>%
+  kable_styling(bootstrap_options = "bordered", full_width = TRUE) %>%
+  row_spec(16,bold = TRUE)%>%
+    row_spec(16,extra_css = "border-bottom:dotted;")%>%
+add_header_above(c("Factors Contributing for Success of the Group" = 5))
+```
+
+The weights add up to 100%, which means the final score will be based on the combination of all three factors. The GPA has the highest weight (40%) because it is often seen as the most important indicator of academic performance. Communication skills and Teamwork skills each have a weight of 30%, meaning they are also important, but not as much as GPA. 
+
+#### <b>1.Formulate the Model: Define the decision variables, objective function, and constraints based on the given requirements and preliminary issues.</b>
+
+*Defining the decision variables which is discussed as follows,*
+
+$$ G_i \hspace{0.2cm} represent  \hspace{0.2cm} groups \hspace{0.2cm} where \hspace{0.2cm} i=1,2,3,4,5 $$
+$$ S_j \hspace{0.2cm} represents \hspace{0.2cm} students \hspace{0.2cm} where \hspace{0.2cm} j=1,2,3,4,5,6,7,8,9,10,11,12,13,14,15 $$
+
+#### Objective function:
+
+The goal is to maximize the success of the class project by focusing on three important factors: GPA, Technical Skill, and Teamwork. All the factors has been assigned a weight based on its importance: GPA contributes 40%, Technical Skill contributes 30%, and Teamwork also contributes 30%. The objective function, we computed the weighted average of these three factors. The Objectivefunction is:
+
+$$ Max \hspace{0.2cm} Z = 6.87G_1S_1 +  5.67G_1S_2 + 4.84G_1S_3 + 6.03G_1S_4 + 5.76G_1S_5 + 5.83G_1S_6 + 6.42G_1S_7 + 5.44G_1S_8 + 6.13G_1S_9 + 5.17G_1S_{10} + 5.48G_1S_{11} + 5.17G_1S_{12} + 5.61G_1S_{13} + 4.94G_1S_{14} + 4.06G_1S_{15} $$ 
+$$ + 6.87G_2S_1 + 5.67G_2S_2 + 4.84G_2S_3 + 6.03G_2S_4 + 5.76G_2S_5 + 5.83G_2S_6 + 6.42G_2S_7 + 5.44G_2S_8 + 6.13G_2S_9 + 5.17G_2S_{10} + 5.48G_2S_{11} + 5.17G_2S_{12} + 5.61G_2S_{13} + 4.94G_2S_{14} + 4.06G_2S_{15} $$ 
+$$ + 6.87G_3S_1 + 5.67G_3S_2 + 4.84G_3S_3 + 6.03G_3S_4 + 5.76G_3S_5 + 5.83G_3S_6 + 6.42G_3S_7 + 5.44G_3S_8 + 6.13G_3S_9 + 5.17G_3S_{10} + 5.48G_3S_{11} +  5.17G_3S_{12} + 5.61G_3S_{13} + 4.94G_3S_{14} + 4.06G_3S_{15} $$ 
+$$ + 6.87G_4S_1 + 5.67G_4S_2 + 4.84G_4S_3 + 6.03G_4S_4 + 5.76G_4S_5 + 5.83G_4S_6 + 6.42G_4S_7 + 5.44G_4S_8 + 6.13G_4S_9 + 5.17G_4S_{10} + 5.48G_4S_{11} + 5.17G_4S_{12} + 5.61G_4S_{13} + 4.94G_4S_{14} + 4.06G_4S_{15} $$ $$ + 6.87G_5S_1 + 5.67G_5S_2 + 4.84G_5S_3 + 6.03G_5S_4 + 5.76G_5S_5 + 5.83G_5S_6 + 6.42G_5S_7 + 5.44G_5S_8 + 6.13G_5S_9 + 5.17G_5S_{10} + 5.48G_5S_{11} + 5.17G_5S_{12} + 5.61G_5S_{13} + 4.94G_5S_{14} + 4.06G_5S_{15} $$
+
+### Constraints:
+
+*Formulating the constraints basing on all the decision variables.*
+
+##### <u>Group Constraints:-</u>
+
+*Group1_Students:* $$  G_1S_1 +  G_1S_2 + G_1S_3 + G_1S_4 + G_1S_5 + G_1S_6 + G_1S_7 + G_1S_8 + G_1S_9 + G_1S_{10} + G_1S_{11} + G_1S_{12} + G_1S_{13} + G_1S_{14} + G_1S_{15} = 3 $$ 
+*Group2_Students:* $$ G_2S_1 + G_2S_2 + G_2S_3 + G_2S_4 + G_2S_5 + G_2S_6 + G_2S_7 + G_2S_8 + G_2S_9 + G_2S_{10} + G_2S_{11} + G_2S_{12} + G_2S_{13} + G_2S_{14} + G_2S_{15} = 3 $$ 
+*Group3_Students:* $$ G_3S_1 + G_3S_2 + G_3S_3 + G_3S_4 + G_3S_5 + G_3S_6 + G_3S_7 + G_3S_8 + G_3S_9 + G_3S_{10} + G_3S_{11} + G_3S_{12} + G_3S_{13} + G_3S_{14} + G_3S_{15} = 3 $$ 
+*Group4_Students:* $$ G_4S_1 + G_4S_2 + G_4S_3 + G_4S_4 + G_4S_5 + G_4S_6 + G_4S_7 + G_4S_8 + G_4S_9 + G_4S_{10} + G_4S_{11} + G_4S_{12} + G_4S_{13} + G_4S_{14} + G_4S_{15} = 3 $$ 
+*Group5_Students:* $$ G_5S_1 + G_5S_2 + G_5S_3 + G_5S_4 + G_5S_5 + G_5S_6 + G_5S_7 + G_5S_8 + G_5S_9 + G_5S_{10} + G_5S_{11} + G_5S_{12} + G_5S_{13} + G_5S_{14} + G_5S_{15} = 3 $$
+
+##### <u>Student:-</u>
+
+*Student1:* $$ G_1S_1 + G_2S_1 + G_3S_1 + G_4S_1 + G_5S_1 = 1 $$ 
+*Student2:* $$ G_1S_2 + G_2S_2 + G_3S_2 + G_4S_2 + G_5S_2 = 1 $$ 
+*Student3:* $$ G_1S_3 + G_2S_3 + G_3S_3 + G_4S_3 + G_5S_3 = 1 $$ 
+*Student4:* $$ G_1S_4 + G_2S_4 + G_3S_4 + G_4S_4 + G_5S_4 = 1 $$ 
+*Student5:* $$ G_1S_5 + G_2S_5 + G_3S_5 + G_4S_5 + G_5S_5 = 1 $$ 
+*Student6:* $$ G_1S_6 + G_2S_6 + G_3S_6 + G_4S_6 + G_5S_6 = 1 $$
+*Student7:* $$ G_1S_7 + G_2S_7 + G_3S_7 + G_4S_7 + G_5S_7 = 1 $$
+*Student8:* $$ G_1S_8 + G_2S_8 + G_3S_8 + G_4S_8 + G_5S_8 = 1 $$
+*Student9:* $$ G_1S_9 + G_2S_9 + G_3S_9 + G_4S_9 + G_5S_9 = 1 $$ 
+*Student10:* $$ G_1S_{10} + G_2S_{10} + G_3S_{10} + G_4S_{10} + G_5S_{10} = 1 $$ 
+*Student11:* $$ G_1S_{11} + G_2S_{11} + G_3S_{11} + G_4S_{11} + G_5S_{11} = 1 $$ 
+*Student12:* $$ G_1S_{12} + G_2S_{12} + G_3S_{12} + G_4S_{12} + G_5S_{12} = 1 $$ 
+*Student13:* $$ G_1S_{13} + G_2S_{13} + G_3S_{13} + G_4S_{13} + G_5S_{13} = 1 $$ 
+*Student14:* $$ G_1S_{14} + G_2S_{14} + G_3S_{14} + G_4S_{14} + G_5S_{14} = 1 $$
+*Student15:* $$ G_1S_{15} + G_2S_{15} + G_3S_{15} + G_4S_{15} + G_5S_{15} = 1 $$
+
+##### <u>Factor constraints:-</u>
+
+#### <u>For Factor GPA:</u>
+
+*Group1_Factor1:* $$ 2.93G_1S_1 +  3.68G_1S_2 + 3.11G_1S_3 + 3.82G_1S_4 + 3.91G_1S_5 + 2.57G_1S_6 + 3.29G_1S_7 + 3.84G_1S_8 + 3.33G_1S_9 + 3.18G_1S_{10} + 3.94G_1S_{11} + 3.18G_1S_{12} + 3.52G_1S_{13} + 3.36G_1S_{14} + 2.65G_1S_{15} \ge 3.35 $$ 
+*Group2_Factor1:* $$ 2.93G_2S_1 + 3.68G_2S_2 + 3.11G_2S_3 + 3.82G_2S_4 + 3.91G_2S_5 + 2.57G_2S_6 + 3.29G_2S_7 + 3.84G_2S_8 + 3.33G_2S_9 + 3.18G_2S_{10} + 3.94G_2S_{11} + 3.18G_2S_{12} + 3.52G_2S_{13} + 3.36G_2S_{14} + 2.65G_2S_{15} \ge 3.35 $$ 
+*Group3_Factor1:* $$ 2.93G_3S_1 + 3.68G_3S_2 + 3.11G_3S_3 + 3.82G_3S_4 + 3.91G_3S_5 + 2.57G_3S_6 + 3.29G_3S_7 + 3.84G_3S_8 + 3.33G_3S_9 + 3.18G_3S_{10} + 3.94G_3S_{11} + 3.18G_3S_{12} + 3.52G_3S_{13} + 3.36G_3S_{14} + 2.65G_3S_{15} \ge 3.35 $$ 
+*Group4_Factor1:* $$ 2.93G_4S_1 + 3.68G_4S_2 + 3.11G_4S_3 + 3.82G_4S_4 + 3.91G_4S_5 + 2.57G_4S_6 + 3.29G_4S_7 + 3.84G_4S_8 + 3.33G_4S_9 + 3.18G_4S_{10} + 3.94G_4S_{11} + 3.18G_4S_{12} + 3.52G_4S_{13} + 3.36G_4S_{14} + 2.65G_4S_{15} \ge 3.35 $$ 
+*Group5_Factor1:* $$ 2.93G_5S_1 + 3.68G_5S_2 + 3.11G_5S_3 + 3.82G_5S_4 + 3.91G_5S_5 + 2.57G_5S_6 + 3.29G_5S_7 + 3.84G_5S_8 + 3.33G_5S_9 + 3.18G_5S_{10} + 3.94G_5S_{11} + 3.18G_5S_{12} + 3.52G_5S_{13} + 3.36G_5S_{14} + 2.65G_5S_{15} \ge 3.35 $$
+
+#### <u>For Factor Communication</u>
+
+*Group1_Factor2:* $$ 9G_1S_1 +  5G_1S_2 + 4G_1S_3 + 6G_1S_4 + 10G_1S_5 + 9G_1S_6 + 8G_1S_7 + 8G_1S_8 + 10G_1S_9 + 8G_1S_{10} + 8G_1S_{11} + 7G_1S_{12} + 8G_1S_{13} + 6G_1S_{14} + 5G_1S_{15} \ge 7 $$ 
+*Group2_Factor2:* $$ 9G_2S_1 + 5G_2S_2 + 4G_2S_3 + 6G_2S_4 + 10G_2S_5 + 9G_2S_6 + 8G_2S_7 + 8G_2S_8 + 10G_2S_9 + 8G_2S_{10} + 8G_2S_{11} + 7G_2S_{12} + 8G_2S_{13} + 6G_2S_{14} + 5G_2S_{15} \ge 7 $$ 
+*Group3_Factor2:*$$ 9G_3S_1 + 5G_3S_2 + 4G_3S_3 + 6G_3S_4 + 10G_3S_5 + 9G_3S_6 + 8G_3S_7 + 8G_3S_8 + 10G_3S_9 + 8G_3S_{10} + 8G_3S_{11} + 7G_3S_{12} + 8G_3S_{13} + 6G_3S_{14} + 5G_3S_{15} \ge 7 $$ 
+*Group4_Factor2:* $$ 9G_4S_1 + 5G_4S_2 + 4G_4S_3 + 6G_4S_4 + 10G_4S_5 + 9G_4S_6 + 8G_4S_7 + 8G_4S_8 + 10G_4S_9 + 8G_4S_{10} + 8G_4S_{11} + 7G_4S_{12} + 8G_4S_{13} + 6G_4S_{14} + 5G_4S_{15} \ge 7 $$ 
+*Group5_Factor2:* $$ 9G_5S_1 + 5G_5S_2 + 4G_5S_3 + 6G_5S_4 + 10G_5S_5 + 9G_5S_6 + 8G_5S_7 + 8G_5S_8 + 10G_5S_9 + 8G_5S_{10} + 8G_5S_{11} + 7G_5S_{12} + 8G_5S_{13} + 6G_5S_{14} + 5G_5S_{15} \ge 7 $$
+
+#### <u>For Modelling:</u>
+
+*Group1_Factor3:* $$ 10G_1S_1 +  9G_1S_2 + 8G_1S_3 + 9G_1S_4 + 4G_1S_5 + 7G_1S_6 + 9G_1S_7 + 5G_1S_8 + 6G_1S_9 + 5G_1S_{10} + 5G_1S_{11} + 6G_1S_{12} + 6G_1S_{13} + 6G_1S_{14} + 5G_1S_{15} \ge 7 $$
+*Group2_Factor3:* $$ 10G_2S_1 + 9G_2S_2 + 8G_2S_3 + 9G_2S_4 + 4G_2S_5 + 7G_2S_6 + 9G_2S_7 + 5G_2S_8 + 6G_2S_9 + 5G_2S_{10} + 5G_2S_{11} + 6G_2S_{12} + 6G_2S_{13} + 6G_2S_{14} + 5G_2S_{15} \ge 7 $$
+*Group3_Factor3:*$$ 10G_3S_1 + 9G_3S_2 + 8G_3S_3 + 9G_3S_4 + 4G_3S_5 + 7G_3S_6 + 9G_3S_7 + 5G_3S_8 + 6G_3S_9 + 5G_3S_{10} + 5G_3S_{11} + 6G_3S_{12} + 6G_3S_{13} + 6G_3S_{14} + 5G_3S_{15} \ge 7 $$
+*Group4_Factor3:* $$ 10G_4S_1 + 9G_4S_2 + 8G_4S_3 + 9G_4S_4 + 4G_4S_5 + 7G_4S_6 + 9G_4S_7 + 5G_4S_8 + 6G_4S_9 + 5G_4S_{10} + 5G_4S_{11} + 6G_4S_{12} + 6G_4S_{13} + 6G_4S_{14} + 5G_4S_{15} \ge 7 $$ 
+*Group5_Factor3:* $$ 10G_5S_1 + 9G_5S_2 + 8G_5S_3 + 9G_5S_4 + 4G_5S_5 + 7G_5S_6 + 9G_5S_7 + 5G_5S_8 + 6G_5S_9 + 5G_5S_{10} + 5G_5S_{11} + 6G_5S_{12} + 6G_5S_{13} + 6G_5S_{14} + 5G_5S_{15} \ge 7 $$
+
+#### <b><u>Non-negativity of the decision variables:-</b></u>
+
+$$  G_iS_j \ge 0 \hspace{0.2cm} where \hspace{0.2cm} i=1,2,3,4,5 \hspace{0.2cm} and \hspace{0.2cm}j=1,2,...15 $$
+
+#### *<b>2.Solve the Model in R: Implement the formulated model in R to find the optimal solution.</b>*
+
+##### *Loading the required libraries.*
+
+```{r}
+library(lpSolveAPI)
+```
+
+##### *Creating an Linear Programming problem instance with 35 constraints and 75 decision variables.*
+
+```{r}
+lp <- make.lp(35, 75)
+invisible(lp.control(lp, sense = "max", verbose = "neutral"))
+
+```
+
+##### *Setting the objective function coefficients for the 75 decision variables.*
+
+```{r}
+set.objfn(lp, c(6.87,5.67,4.84, 6.03, 5.76, 5.83, 6.42, 5.44, 6.13, 5.17, 5.48, 5.17, 5.61, 4.94, 4.06, 
+                6.87,5.67,4.84, 6.03, 5.76, 5.83, 6.42, 5.44, 6.13, 5.17, 5.48, 5.17, 5.61, 4.94, 4.06,  
+                6.87,5.67,4.84, 6.03, 5.76, 5.83, 6.42, 5.44, 6.13, 5.17, 5.48, 5.17, 5.61, 4.94, 4.06,  
+                6.87,5.67,4.84, 6.03, 5.76, 5.83, 6.42, 5.44, 6.13, 5.17, 5.48, 5.17, 5.61, 4.94, 4.06,  
+                6.87,5.67,4.84, 6.03, 5.76, 5.83, 6.42, 5.44, 6.13, 5.17, 5.48, 5.17, 5.61, 4.94, 4.06))
+```
+
+##### *Setting the Objective sense to ‘max’.*
+
+```{r}
+lp.control(lp, sense = "max", verbose = "neutral")
+invisible(lp.control(lp, sense = "max", verbose = "neutral"))
+```
+
+##### *Adding Group Constraints to the LP Problem.*
+
+```{r}
+set.row(lp,1, c(1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0))
+set.row(lp,2, c(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0))
+set.row(lp,3, c(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0))
+set.row(lp,4, c(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0))
+set.row(lp,5, c(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1))
+```
+
+##### *Adding Student Constraints to the LP Problem.*
+
+```{r}
+set.row(lp,6, c( 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0))
+set.row(lp,7, c( 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0))
+set.row(lp,8, c( 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0))
+set.row(lp,9, c( 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0))
+set.row(lp,10, c( 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0))
+set.row(lp,11, c( 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0))
+set.row(lp,12, c( 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0))
+set.row(lp,13, c( 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0))
+set.row(lp,14, c( 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0))
+set.row(lp,15, c(0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0))
+set.row(lp,16, c(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0))
+set.row(lp,17, c(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0))
+set.row(lp,18, c( 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0))
+set.row(lp,19, c( 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0))
+set.row(lp,20, c( 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1))
+```
+
+##### *Adding Factor constraints to the LP Problem*
+
+```{r}
+#Factor_1 Constraints:-
+
+set.row(lp,21, c(2.93, 3.68, 3.11, 3.82, 3.91, 2.57, 3.29, 3.84, 3.33, 3.18, 3.94, 3.18, 3.52, 3.36, 2.65, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0))
+set.row(lp,22, c( 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2.93, 3.68, 3.11, 3.82, 3.91, 2.57, 3.29, 3.84, 3.33, 3.18, 3.94, 3.18, 3.52, 3.36, 2.65, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0))
+set.row(lp,23, c(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2.93, 3.68, 3.11, 3.82, 3.91, 2.57, 3.29, 3.84, 3.33, 3.18, 3.94, 3.18, 3.52, 3.36, 2.65, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0))
+set.row(lp,24, c( 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2.93, 3.68, 3.11, 3.82, 3.91, 2.57, 3.29, 3.84, 3.33, 3.18, 3.94, 3.18, 3.52, 3.36, 2.65, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0))
+set.row(lp,25, c( 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2.93, 3.68, 3.11, 3.82, 3.91, 2.57, 3.29, 3.84, 3.33, 3.18, 3.94, 3.18, 3.52, 3.36, 2.65))
+
+#Factor_2 Constraints:-
+
+set.row(lp,26, c(9, 5, 4, 6, 10, 9, 8, 8, 10, 8, 8, 7, 8, 6, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0))
+set.row(lp,27, c( 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 9, 5, 4, 6, 10, 9, 8, 8, 10, 8, 8, 7, 8, 6, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0))
+set.row(lp,28, c(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 9, 5, 4, 6, 10, 9, 8, 8, 10, 8, 8, 7, 8, 6, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0))
+set.row(lp,29, c( 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 9, 5, 4, 6, 10, 9, 8, 8, 10, 8, 8, 7, 8, 6, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0))
+set.row(lp,30, c( 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 9, 5, 4, 6, 10, 9, 8, 8, 10, 8, 8, 7, 8, 6, 5))
+
+#Factor_3 Constraints:-
+
+set.row(lp,31, c(10, 9, 8, 9, 4, 7, 9, 5, 6, 5, 5, 6, 6, 6, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0))
+set.row(lp,32, c( 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 10, 9, 8, 9, 4, 7, 9, 5, 6, 5, 5, 6, 6, 6, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0))
+set.row(lp,33, c(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 10, 9, 8, 9, 4, 7, 9, 5, 6, 5, 5, 6, 6, 6, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0))
+set.row(lp,34, c( 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 10, 9, 8, 9, 4, 7, 9, 5, 6, 5, 5, 6, 6, 6, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0))
+set.row(lp,35, c( 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 10, 9, 8, 9, 4, 7, 9, 5, 6, 5, 5, 6, 6, 6, 5))
+```
+
+##### *Creating a vector for the right-hand side (RHS) that contains the  values for the two constraints.*
+
+```{r}
+rhs<-c(3,3,3,3,3,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,3.35,3.35,3.35,3.35,3.35,7,7,7,7,7,7,7,7,7,7)
+```
+
+##### *Setting the right-hand side values to the constraints in the linear programming problem.*
+
+```{r}
+set.rhs(lp,rhs)
+```
+
+##### *Defining the types of constraints for the given conditions.*
+
+```{r}
+set.constr.type(lp,c("=","=","=","=","=","=","=","=","=","=","=","=","=","=","=","=","=","=","=", "=",">=",">=",">=", ">=",">=",">=",">=",">=",">=",">=",">=",">=",">=",">=",">="))
+```
+
+##### *Setting bounds for the decision variables explicitly.*
+
+```{r}
+set.bounds(lp,lower = rep(0,75))
+```
+
+##### *Assigning names to the decision variables.*
+
+```{r}
+lp.colnames <- c("G1S1", "G1S2", "G1S3", "G1S4", "G1S5", "G1S6", "G1S7", "G1S8", "G1S9", "G1S10", "G1S11", "G1S12", "G1S13", "G1S14", "G1S15", "G2S1", "G2S2", "G2S3", "G2S4", "G2S5", "G2S6", "G2S7", "G2S8", "G2S9", "G2S10", "G2S11", "G2S12", "G2S13", "G2S14", "G2S15", "G3S1", "G3S2", "G3S3", "G3S4", "G3S5", "G3S6", "G3S7", "G3S8", "G3S9", "G3S10", "G3S11", "G3S12", "G3S13", "G3S14", "G3S15", "G4S1", "G4S2", "G4S3", "G4S4", "G4S5", "G4S6", "G4S7", "G4S8", "G4S9", "G4S10", "G4S11", "G4S12", "G4S13", "G4S14", "G4S15", "G5S1", "G5S2", "G5S3", "G5S4", "G5S5", "G5S6", "G5S7", "G5S8", "G5S9", "G5S10", "G5S11", "G5S12", "G5S13", "G5S14", "G5S15")
+```
+
+##### *Assigning names to the constraints.*
+
+```{r}
+lp.rownames <- c("Group1Students", "Group2Students", "Group3Students", "Group4Students", "Group5Students", "Student1", "Student2", "Student3", "Student4", "Student5", "Student6", "Student7", "Student8", "Student9", "Student10","Student11","Student12", "Student13", "Student14", "Student15", "Group1Factor1", "Group2Factor1", "Group3Factor1","Group4Factor1", "Group5Factor1", "Group1Factor2","Group2Factor2","Group3Factor2","Group4Factor2", "Group5Factor2", "Group1Factor3","Group2Factor3","Group3Factor3","Group4Factor3", "Group5Factor3")
+dimnames(lp) = list(lp.rownames,(1:75))
+```
+
+##### *Setting type for the variables to 'Integer'.*
+
+```{r}
+set.type(lp,1:75,type = "integer")
+lp
+```
+
+##### *Solving the LP problem using the specified constraints and objective function.*
+
+```{r}
+solve(lp)
+```
+
+##### *Retrieving the optimal objective value of the LP problem.*
+
+```{r}
+get.objective(lp)
+```
+
+##### *Retrieving the values of the decision variables at the optimal solution.*
+
+```{r}
+get.variables(lp)
+```
+
+##### *Retrieving the values of the constraints at the optimal solution.*
+
+```{r}
+get.constraints(lp)
+```
+
+The development and implementation of the mathematically optimization model this project successfully maximizes the overall success potential of groups formed in the classroom. The integration of weighted factors are GPA, Technical Skills and Teamwork. R code is used for data generation, model formulation and solution provided for an efficient approach on solving the project. 
+
+The results shows that by leveraging optimization techniques can effectively create groups that are well-balanced in terms of skills to enhance potential of success. This project underscores the adaptability of mathematical modeling in solving structured problems and showcases its wide-ranging applications in both academic and professional contexts.
+
+# Bar plot (Showing Average of GPA, Communication, and Teamwork)
+
+```{r}
+# Load necessary libraries
+library(ggplot2)
+library(tidyr)
+
+# Create the data frame
+students <- 1:15
+GPA <- c(2.93, 3.68, 3.11, 3.82, 3.91, 2.57, 3.29, 3.84, 3.33, 3.18, 3.94, 3.18, 3.52, 3.36, 2.65)
+Communication <- c(9, 5, 4, 6, 10, 9, 8, 8, 10, 8, 8, 7, 8, 6, 5)
+Teamwork <- c(10, 9, 8, 9, 4, 7, 9, 5, 6, 5, 5, 6, 6, 6, 5)
+
+# Create a data frame
+df <- data.frame(Student = students, GPA = GPA, Communication = Communication, Teamwork = Teamwork)
+
+# Reshape the data for easier plotting
+df_long <- df %>%
+  gather(key = "Factor", value = "Score", GPA, Communication, Teamwork)
+
+# Create a bar chart
+ggplot(df_long, aes(x = factor(Student), y = Score, fill = Factor)) +
+  geom_bar(stat = "identity", position = "dodge") +
+  labs(x = "Student", y = "Score", title = "Average Scores for Each Factor (GPA, Communication, Teamwork)") +
+  scale_fill_manual(values = c("GPA" = "skyblue", "Communication" = "red", "Teamwork" = "brown")) +
+  theme_minimal()
+
+```
+
+This bar chart helps us understand how 15 students perform in GPA, communication, and teamwork. Each student is represented on the x-axis, and the y-axis shows their scores. For every student, there are three bars in different colors, one for each factor. Communication and teamwork are the most important skills for group projects, as they show how well a student can collaborate and interact with others. While GPA matters, it doesn’t always reflect a student’s ability to contribute to a team.
+
+For example, students 1, 6, and 9, who have high communication and teamwork scores, are like team players who make the group stronger, even if their GPA isn’t the highest. On the other hand, students with low teamwork or communication scores, like student 5, might face challenges even if their GPA is high. Interestingly, students with lower GPAs but stronger communication and teamwork skills, such as 1 and 7, can still be great contributors to group projects.
+
+In conclusion, that communication and teamwork are key factors for success in group work. Focusing on improving these skills can help students collaborate better and increase their chances of project success.
+
+# GPA vs Communication Skill Scatter plot
+
+```{r}
+# Create a scatter plot for GPA vs Communication Skill
+ggplot(df, aes(x = GPA, y = Communication)) +
+  geom_point(color = "blue", size = 3) +
+  labs(x = "GPA", y = "Communication Skill", title = "Scatter Plot: GPA vs Communication Skill") +
+  theme_minimal()
+
+```
+
+A scatter plot helps us see the relationship between GPA and communication skills. Each dot on the plot represents one student, showing their GPA on the x-axis and communication skill on the y-axis. If the dots form a clear pattern, like an upward trend, it means there’s a connection between the two factors, students with higher GPA may also have better communication skills. If the dots are spread out randomly, it means there’s no strong relationship. 
+Scatter plot for GPA and communication skills, we can interpret that students with a GPA below 3 include one with low communication skills and another with better communication skills, showing that GPA doesn’t always predict communication ability. For students with a GPA above 3, some have strong communication skills, while others have lower communication skills, which shows a mix of abilities. Students who have both high GPA and strong communication skills are likely to perform well in both academics and teamwork. On the other hand, students with low GPA but high communication skills might still be valuable in group projects because they can collaborate effectively.
+
+# GPA vs. Teamwork Skill Scatter Plot
+
+```{r}
+# Create a scatter plot for GPA vs Teamwork
+ggplot(df, aes(x = GPA, y = Teamwork)) +
+  geom_point(color = "red", size = 3) +
+  labs(x = "GPA", y = "Teamwork Skill", title = "Scatter Plot: GPA vs Teamwork Skill") +
+  theme_minimal()
+
+```
+
+This plot compares GPA with teamwork ability. Here, if the dots are spread randomly with no clear upward or downward trend, it means GPA doesn't strongly affect teamwork ability. 
+
+Some students with higher GPAs may have better teamwork scores, while others do not.
+This shows a mix of skills among the students.
+
+# Communication Skill vs. Teamwork Skill Scatter Plot
+
+```{r}
+# Create a scatter plot for Communication Skill vs Teamwork Skill
+ggplot(df, aes(x = Communication, y = Teamwork)) +
+  geom_point(color = "green", size = 3) +
+  labs(x = "Communication Skill", y = "Teamwork Skill", title = "Scatter Plot: Communication Skill vs Teamwork Skill") +
+  theme_minimal()
+```
+
+The scatter plot of Communication Skill vs. Teamwork Skill shows that most points are clustered in the center. This means that most students have similar average levels of both communication and teamwork abilities. It suggests that these two skills are balanced among the group, with no standout individuals excelling or struggling significantly in either area. The plot also shows that there isn’t a clear relationship between communication and teamwork—having strong communication skills doesn’t guarantee strong teamwork skills, and vice versa.
+
+Overall, this indicates that while the group is consistent and likely to collaborate well, they may lack exceptionally strong contributors in these areas.
+
+***The Communication Skill vs. Teamwork Skill scatter plot provides the best key insight***
+
+The Communication Skill vs. Teamwork Skill scatter plot shows a clear clustering pattern, with most students grouped within a central range for both communication and teamwork. This suggests that their performance levels are similar in these two areas, meaning that most students have average communication and teamwork abilities rather than excelling in one skill and being weak in the other.
+
+On the other hand, the GPA vs. Communication Skill and GPA vs. Teamwork Skill scatter plots show scattered points, indicating no strong connection between GPA and these skills. Most students are not grouped within a central range, showing that their performance levels vary widely. This happens because a high GPA reflects academic success but doesn’t always predict a student’s teamwork or communication skills. Some students with lower GPAs may have strong communication or teamwork abilities, while others with high GPAs may struggle in these areas. This shows that GPA alone doesn’t determine a student’s interpersonal or teamwork abilities.
+
+
+
+
+
+
+

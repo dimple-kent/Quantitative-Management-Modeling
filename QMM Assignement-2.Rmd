@@ -1,0 +1,245 @@
+---
+title: "QMM Module-4 Assignment"
+author: "FNU Dimple"
+date: "2024-09-20"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(warning = FALSE, message = FALSE)
+dir.create("images")
+```
+# Question:
+
+The Weigelt Corporation has three branch plants with excess production capacity. Fortunately, the corporation has a new product ready to begin production, and all three plants have this capability, so some of the excess capacity can be used in this way. This product can be made in three sizes–large, medium, and small–that yield a net unit profit of $420, $360, and $300, respectively. Plants 1, 2, and 3 have the excess capacity to produce 750, 900, and 450 units per day of this product, respectively, regardless of the size or combination of sizes involved. The amount of available in-process storage space also imposes a limitation on the production rates of the new product. Plants 1, 2, and 3 have 13,000, 12,000, and 5,000 square feet, respectively, of in-process storage space available for a day’s production of this product. Each unit of the large, medium, and small sizes produced per day requires 20, 15, and 12 square feet, respectively. Sales forecasts indicate that if available, 900, 1,200, and 750 units of the large, medium, and small sizes, respectively, would be sold per day. At each plant, some employees will need to be laid off unless most of the plant’s excess production capacity can be used to produce the new product. To avoid layoffs if possible, management has decided that the plants should use the same percentage of their excess capacity to produce the new product. Management wishes to know how much of each of the sizes should be produced by each of the plants to maximize profit.
+
+
+```{r}
+data <- matrix(c(
+  "L1, M1, S1", "L2, M2, S2", "L3, M3, S3",        
+  "$420", "$360", "$300",                          
+  750, 900, 450,
+  900, 1200, 750,
+  20, 15, 12, 
+  13000,12000,5000), 
+  ncol = 3, byrow = TRUE)
+
+# Assign column names (plants) and row names (attributes)
+
+colnames(data) <- c("Plant1", "Plant2", "Plant3")
+
+rownames(data) <- c("Sizes", "Profits per unit", "Excess Capacity", "Unit Area(large, medium and small)","Available Storage Space", "Sales forcast")
+
+# Convert to table format (optional, since data is already in matrix form)
+
+table <- as.table(data)
+
+# Print the table
+
+table
+
+
+```
+# Answer to the question:
+ Maximize profit from producing three sizes of the product (large, medium, small) at three plants (Plant 1, Plant 2, Plant 3) the Management wishes to know how much of each of the sizes should be produced by each of the plants to maximize profit. 
+
+# Decision Variables:
+The decision variable represent the number of large, medium and small products produced at plant 1, 2 and 3 
+
+Let assume, 
+Plant 1 = X, Plant 2 = Y, Plant = Z
+
+- Production of plant 1 in large = $X_{L1}$ 
+-  Production of plant 1 in medium = $X_{M1}$          
+- production of plant 1 in small = $X_{S1}$
+
+- Production of plant 2 in large = $Y_{L2}$
+- Production of plant 2 in medium = $Y_{M2}$
+- production of plant 2 in small = $Y_{S2}$
+
+- Production of plant 3 in large = $Z_{L3}$
+- Production of plant 3 in medium = $Z_{M3}$
+- production of plant 3 in small = $Z_{S3}$
+
+ So the decision Variables are
+                 =$$X_{L1},X_{M1},X_{S1},Y_{L2},Y_{M2},Y_{S2},Z_{L3},Z_{M3} \hspace{.3cm}and \hspace{.3cm} Z_{S3}$$
+
+
+
+# The Objective function is:
+Maximize the profit from producing large, medium and small units across all three plants.
+
+Large $420 per unit
+
+Medium $360 per unit
+
+Small $300 per unit
+
+$$Max\hspace{.3cm} A =420X_{L1}+360X_{M1}+300X_{S1}+420Y_{L2}+360Y_{M2}+300Y_{S2}+420Z_{L3}+360Z_{M3}+300Z_{S3}$$
+
+# Constraints:
+
+ ***Capacity Constraint***
+
+- Plant1: $$X_{L1}+X_{M1}+X_{S1}\le750$$
+
+- Plant2: $$Y_{L2}+Y_{M2}+Y_{S2}\le900$$
+
+- Plant3: $$Z_{L3}+Z_{M3}+Z_{S3}\le450$$
+ 
+ 
+ ***Storage Constraint***
+ 
+ - Plant1: $$20X_{L1}+15X_{M1}+12X_{S1}\le13000$$
+ 
+ - Plant2: $$20Y_{L2}+15Y_{M2}+12Y_{S2}\le12000$$
+ 
+ - Plant3: $$20Z_{L3}+15Z_{M3}+12Z_{S3}\le5000$$
+ 
+ ***Sales Forecast Constraint***
+ 
+- Large: $$X_{L1}+Y_{L2}+Z_{L3}\le900$$
+
+- Medium: $$X_{M1}+Y_{M2}+Z_{M3}\le1200$$
+
+- Small: $$X_{S1}+Y_{S2}+Z_{S3}\le750$$
+
+Excess Capacity constraint: In this constraint, we need to check whether the same percentage of excess capacity is used to produce the new product at all three plants.
+ 
+ $$X_{L1}+X_{M1}+X_{S1}/750 \hspace{.3cm}-\hspace{.3cm} Y_{L2}+Y_{M2}+Y_{S2}/900 \hspace{.3cm}= \hspace{.3cm}0$$
+ $$Y_{L2}+Y_{M2}+Y_{S2}/900
+ \hspace{.3cm}-\hspace{.3cm} Z_{L3}+Z_{M3}+Z_{S3}/450\hspace{.3cm}= \hspace{.3cm}0$$
+
+$$Z_{L3}+Z_{M3}+Z_{S3}/450\hspace{.3cm}-\hspace{.3cm}X_{L1}+X_{M1}+X_{S1}/750\hspace{.3cm}=\hspace{.3cm}0$$
+ ***Non-negativity***
+ $$X_{L1}\ge0,X_{M1}\ge0,X_{S1}\ge0,Y_{L2}\ge0,Y_{M2}\ge0,Y_{S2}\ge0,Z_{L3}\ge0,Z_{M3}\ge0,Z_{S3}\ge0$$
+# The full LP model of the given problem is as follows
+$$Max\hspace{.3cm} A =420X_{L1}+360X_{M1}+300X_{S1}+420Y_{L2}+360Y_{M2}+300Y_{S2}+420Z_{L3}+360Z_{M3}+300Z_{S3}$$
+These lp problem can be writing in another format
+
+Capacity Constraint:
+
+ $$X_{L1}+X_{M1}+X_{S1}\le750$$
+ $$Y_{L2}+Y_{M2}+Y_{S2}\le900$$
+ $$Z_{L3}+Z_{M3}+Z_{S3}\le450$$
+Storage Constraint
+ 
+  $$20X_{L1}+15X_{M1}+12X_{S1}\le13000$$
+ 
+  $$20Y_{L2}+15Y_{M2}+12Y_{S2}\le12000$$
+ 
+  $$20Z_{L3}+15Z_{M3}+12Z_{S3}\le5000$$
+
+ Sales Constraint:
+ $$X_{L1}+Y_{L2}+Z_{L3}\le900$$
+
+ $$X_{M1}+Y_{M2}+Z_{M3}\le1200$$
+
+ $$X_{S1}+Y_{S2}+Z_{S3}\le750$$
+
+Excess Capacity constraint: In this constraint, we need to check whether the same percentage of excess capacity is used to produce the new product at all three plants.
+
+ 
+ $$X_{L1}+X_{M1}+X_{S1}/750 \hspace{.3cm}-\hspace{.3cm} Y_{L2}+Y_{M2}+Y_{S2}/900 \hspace{.3cm}= \hspace{.3cm}0$$
+ $$Y_{L2}+Y_{M2}+Y_{S2}/900
+ \hspace{.3cm}-\hspace{.3cm} Z_{L3}+Z_{M3}+Z_{S3}/450\hspace{.3cm}= \hspace{.3cm}0$$
+
+$$Z_{L3}+Z_{M3}+Z_{S3}/450\hspace{.3cm}-\hspace{.3cm}X_{L1}+X_{M1}+X_{S1}/750\hspace{.3cm}=\hspace{.3cm}0$$
+ Non-negativity:
+ $$X_{L1}\ge0,X_{M1}\ge0,X_{S1}\ge0,Y_{L2}\ge0,Y_{M2}\ge0,Y_{S2}\ge0,Z_{L3}\ge0,Z_{M3}\ge0,Z_{S3}\ge0$$
+
+# Solve the problem in R using lpSolve package.
+#Install and Load the lpSolve package.
+
+```{r}
+#install.package("lpSolve")
+library(lpSolve)
+```
+
+# The objective function is to maximize A
+
+```{r}
+obj<-c(420,360,300,420,360,300,420,360,300)
+```
+
+Constraint in matrix form.
+
+```{r}
+Constraint<- matrix(c(1,1,1,0,0,0,0,0,0,
+                     0,0,0,1,1,1,0,0,0,
+                     0,0,0,0,0,0,1,1,1,
+                     20,15,12,0,0,0,0,0,0,
+                     0,0,0,20,15,12,0,0,0,
+                     0,0,0,0,0,0,20,15,12,
+                     1,0,0,1,0,0,1,0,0,
+                     0,1,0,0,1,0,0,1,0,
+                     0,0,1,0,0,1,0,0,1,
+                     900,900,900,-750,-750,-750,0,0,0,
+                     0,0,0,450,450,450,-900,-900,-900,
+                     450,450,450,0,0,0,-750,-750,-750),nrow=12,byrow=TRUE)
+```
+
+# Set the right hand side of the coefficients.
+```{r}
+rhs<-c(750,900,450,13000,12000,5000,900,1200,750,0,0,0)
+```
+# Setting the direction of the inequalities using subject to equaition signs.
+
+```{r}
+dir<-c("<=",
+       "<=",
+       "<=",
+       "<=",
+       "<=",
+       "<=",
+       "<=",
+       "<=",
+       "<=",
+       "=",
+       "=",
+       "=")
+```
+
+
+# Finding the objective function value
+```{r}
+opt=lp("max",obj,Constraint,dir,rhs)
+opt$objval
+```
+###### Success the objectve function is 696000
+
+# Getting the value of the Decision Variables.
+```{r}
+opt$solution[1]
+```
+
+```{r}
+opt$solution[2]
+```
+
+```{r}
+opt$solution[3]
+```
+
+```{r}
+opt$solution[4]
+```
+
+```{r}
+opt$solution[5]
+```
+
+```{r}
+opt$solution[6]
+```
+
+```{r}
+opt$solution[7]
+```
+
+```{r}
+opt$solution[8]
+```
+```{r}
+opt$solution[9]
+```
